@@ -134,9 +134,27 @@ with DAG(
     )
 
     # 3. Агрегация
+    # aggregate_task = MyPostgresOperator(
+    #     task_id='aggregate_data_custom',
+    #     sql=f"""
+    #         INSERT INTO {TABLE_AGG} (period, total_attempts, correct_ratio, last_updated)
+    #         SELECT 
+    #             upload_period, 
+    #             COUNT(*) as total_attempts, 
+    #             AVG(CASE WHEN is_correct THEN 1.0 ELSE 0.0 END) as correct_ratio, 
+    #             NOW()
+    #         FROM {TABLE_RAW}
+    #         GROUP BY upload_period
+    #         ON CONFLICT (period) DO UPDATE SET
+    #             total_attempts = EXCLUDED.total_attempts,
+    #             correct_ratio = EXCLUDED.correct_ratio,
+    #             last_updated = EXCLUDED.last_updated;
+    #     """
+    # )
+
     aggregate_task = MyPostgresOperator(
-        task_id='aggregate_data_custom',
-        sql=f"""
+    task_id='aggregate_data_custom',
+    sql=f"""
             INSERT INTO {TABLE_AGG} (period, total_attempts, correct_ratio, last_updated)
             SELECT 
                 upload_period, 
@@ -144,6 +162,7 @@ with DAG(
                 AVG(CASE WHEN is_correct THEN 1.0 ELSE 0.0 END) as correct_ratio, 
                 NOW()
             FROM {TABLE_RAW}
+            WHERE upload_period = '{{{{ macros.ds_add(ds, -macros.datetime.strptime(ds, "%Y-%m-%d").weekday()) }}}}'
             GROUP BY upload_period
             ON CONFLICT (period) DO UPDATE SET
                 total_attempts = EXCLUDED.total_attempts,

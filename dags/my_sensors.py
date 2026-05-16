@@ -1,4 +1,3 @@
-# my_operators.py
 from airflow.sensors.base import BaseSensorOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils.context import Context

@@ -146,6 +146,7 @@ with DAG(
                 AVG(CASE WHEN is_correct THEN 1.0 ELSE 0.0 END) as correct_ratio, 
                 NOW()
             FROM {TABLE_RAW}
+            WHERE upload_period = '{{{{ macros.ds_add(ds, -macros.datetime.strptime(ds, "%Y-%m-%d").weekday()) }}}}'
             GROUP BY upload_period
             ON CONFLICT (period) DO UPDATE SET
                 total_attempts = EXCLUDED.total_attempts,
